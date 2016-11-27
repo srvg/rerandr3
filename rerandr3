@@ -11,12 +11,12 @@
 # for help see show_help function or run rerandr3 help
 
 # hook trigger boundary in pixel quantity (width*height)
-# 1366 * 768 = 1049088
-PIXEL_TRIGGER=1100000
+# 1920 * 1080 = 2073600
+PIXEL_TRIGGER=2073600
 
 # which strategy to use when autostacking
 # (xrandr relative position options: --right-of, --left-of, --above, --below)
-STACK_STRATEGY="--right-of"
+STACK_STRATEGY="--left-of"
 
 SOCKET="/tmp/rerandr3.fifo"
 DAEMON_LOG="$HOME/.rerandr3.log"
