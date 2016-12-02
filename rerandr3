@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim: noexpandtab
 # rerandr3 - Bash multimonitor handler daemon
 # by Vladimir Kudrya
 # https://github.com/Vladimir-csp/
@@ -52,6 +53,8 @@ where command is one of:
 
 	show - dump setup ID and xrandr arguments of current state.
 
+	showx - dump information to be set in Xresources
+
 	daemon - launch user session daemon for automatic triggering.
 
 	trigger-save - tell daemon to do save.
@@ -79,6 +82,8 @@ hooks() {
 	#wp-random
 	#nitrogen --restore
 	#killall -USR1 conky
+	echo " restarting i3"
+	i3-msg restart
 }
 
 smallhooks() {
@@ -299,6 +304,66 @@ dump_args(){
 	echo -n "--dpi $DPI"
 }
 
+dump_xresources_i3(){
+	# echo screen information to fill in ~/.Xresources.d/i3
+	OUTPUT_IDX=0
+	for OUTPUT_NUM in ${!OUTPUT[@]}
+	do
+		# if output is enabled
+		if [ ! -z "${MODE_CURRENT[$OUTPUT_NUM]}" ]
+		then
+			echo "i3.output.${OUTPUT[$OUTPUT_NUM]}: ${MODE_CURRENT[$OUTPUT_NUM]}${POSITION_X[$OUTPUT_NUM]}x${POSITION_Y[$OUTPUT_NUM]}"
+			if [ "${ROLE[$OUTPUT_NUM]}" = "primary" ]
+			then # one primary with index 0
+				echo "i3.output.0: ${OUTPUT[$OUTPUT_NUM]}"
+				echo "i3.output.primary: ${OUTPUT[$OUTPUT_NUM]}"
+			else # secondaries with index 1 and more, index 1 is 'secondary'
+				OUTPUT_IDX=$(( $OUTPUT_NUM + 1 ))
+				echo "i3.output.${OUTPUT_IDX}: ${OUTPUT[$OUTPUT_NUM]}"
+				if [ $OUTPUT_IDX -eq 1 ]
+				then
+					echo "i3.output.secondary: ${OUTPUT[$OUTPUT_NUM]}"
+				fi
+			fi
+		fi
+	done | sort
+}
+
+show_xresource() {
+	resource=$1
+	echo "! ~/.Xresources.d/"${resource}
+	echo
+	echo "! Make sure to include this file from ~/.Xresources by adding"
+	echo "! #include \"~/.Xresources.d/${resource}\""
+	echo
+	echo "! output index 0 is the primary monitor, hence i3.output.0 == i3.output.primary"
+	echo "! output index 1 is the first secondary monitor, hence i3.output.1 == i3.output.secondary"
+	echo
+	dump_xresources_${resource}
+}
+
+save_xresources(){
+	resource=$1
+	mkdir -p ~/.Xresources.d
+	echo Saving ~/.Xresources.d/${resource}
+	show_xresource ${resource} > ~/.Xresources.d/${resource}
+}
+
+dump_xresources() {
+	action=$1
+	for resource in i3
+	do
+		case "$action" in
+			"show")
+				show_xresource ${resource}
+				;;
+			"save")
+				save_xresources ${resource}
+				;;
+		esac
+	done
+}
+
 dump_id(){
 	# generate and echo setup ID based on output names, display models and serial numbers
 	FORMATTER=
@@ -443,6 +508,8 @@ apply_setup(){
 		echo "No configuration found for setup \"${SETUP_ID}\"."
 		apply_auto
 	fi
+	dump_xresources save
+	xrdb -I$HOME ~/.Xresources
 }
 
 getsessionpid(){
@@ -517,6 +584,11 @@ then
 	prepare_confdir
 	get_data
 	show_setup
+elif [ "$1" = "showx" ]
+then
+	prepare_confdir
+	get_data
+	dump_xresources show
 elif [ "$1" = "trigger-save" ]
 then
 	[ -p "$SOCKET" -a "$(stat -c %a "$SOCKET")" = "666" ] && echo save > "$SOCKET"
@@ -572,7 +644,7 @@ then
 			sleep 5s
 		fi
 	done 2>&1 | tee -a "$DAEMON_LOG"
-elif [  "$1" = "hooks" ]
+elif [	"$1" = "hooks" ]
 then
 	applyhooks
 elif [ "$1" = "insert-udev" ]
