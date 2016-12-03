@@ -508,8 +508,6 @@ apply_setup(){
 		echo "No configuration found for setup \"${SETUP_ID}\"."
 		apply_auto
 	fi
-	dump_xresources save
-	xrdb -I$HOME ~/.Xresources
 }
 
 getsessionpid(){
@@ -579,6 +577,9 @@ then
 	prepare_confdir
 	get_data
 	apply_setup
+	get_data
+	dump_xresources save
+	xrdb -I$HOME ~/.Xresources
 elif [ "$1" = "show" ]
 then
 	prepare_confdir
