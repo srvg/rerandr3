@@ -55,6 +55,8 @@ where command is one of:
 
 	showx - dump information to be set in Xresources
 
+	savex - save information in Xresources
+
 	daemon - launch user session daemon for automatic triggering.
 
 	trigger-save - tell daemon to do save.
@@ -82,8 +84,6 @@ hooks() {
 	#wp-random
 	#nitrogen --restore
 	#killall -USR1 conky
-	echo " restarting i3"
-	i3-msg restart
 }
 
 smallhooks() {
@@ -340,13 +340,15 @@ show_xresource() {
 	echo "! output index 1 is the first secondary monitor, hence i3.output.1 == i3.output.secondary"
 	echo
 	dump_xresources_${resource}
+	echo
 }
 
 save_xresources(){
 	resource=$1
 	mkdir -p ~/.Xresources.d
 	echo Saving ~/.Xresources.d/${resource}
-	show_xresource ${resource} > ~/.Xresources.d/${resource}
+	echo
+	show_xresource ${resource} | tee ~/.Xresources.d/${resource} | sed 's/^/  /'
 }
 
 dump_xresources() {
@@ -362,6 +364,14 @@ dump_xresources() {
 				;;
 		esac
 	done
+	if [ "$action" = "save" ]
+	then
+		echo
+		echo Reloading X server resource database utility
+		xrdb -I$HOME ~/.Xresources
+		echo Restarting i3
+		i3-msg restart
+	fi
 }
 
 dump_id(){
@@ -579,7 +589,6 @@ then
 	apply_setup
 	get_data
 	dump_xresources save
-	xrdb -I$HOME ~/.Xresources
 elif [ "$1" = "show" ]
 then
 	prepare_confdir
@@ -590,6 +599,10 @@ then
 	prepare_confdir
 	get_data
 	dump_xresources show
+elif [ "$1" = "savex" ]
+then
+	get_data
+	dump_xresources save
 elif [ "$1" = "trigger-save" ]
 then
 	[ -p "$SOCKET" -a "$(stat -c %a "$SOCKET")" = "666" ] && echo save > "$SOCKET"
