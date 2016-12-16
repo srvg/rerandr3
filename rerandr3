@@ -149,6 +149,7 @@ get_data(){
 	OUTPUT_NUM=-1
 	unset OUTPUT STATUS ROLE POSITION POSITION_X POSITION_Y CRTC MODEL SERIAL MODE_CURRENT MODE_PREFERRED EDID EDID_CATCH RANDR ROTATION REFLECTION GAMMA BRIGHTNESS TRANSFORM
 	OIFS=$IFS
+	date +%Y%m%d-%H%M
 	echo "Gathering data..."
 	IFS=
 	while read LINE ; do
@@ -639,6 +640,7 @@ then
 	while true
 	do
 		echo "Waiting for socket trigger..."
+		echo
 		ACTION="$(cat "$SOCKET" | head -c 8 | sed 's/[^[:alpha:]_-]//g')"
 		if [ "$ACTION" = "save" ]
 		then
