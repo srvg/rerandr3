@@ -308,6 +308,7 @@ dump_args(){
 dump_xresources_i3(){
 	# echo screen information to fill in ~/.Xresources.d/i3
 	OUTPUT_IDX=0
+	RERANDR_OUTPUT_IDX=0
 	for OUTPUT_NUM in ${!OUTPUT[@]}
 	do
 		# if output is enabled
@@ -319,9 +320,9 @@ dump_xresources_i3(){
 				echo "i3.output.0: ${OUTPUT[$OUTPUT_NUM]}"
 				echo "i3.output.primary: ${OUTPUT[$OUTPUT_NUM]}"
 			else # secondaries with index 1 and more, index 1 is 'secondary'
-				OUTPUT_IDX=$(( $OUTPUT_NUM + 1 ))
-				echo "i3.output.${OUTPUT_IDX}: ${OUTPUT[$OUTPUT_NUM]}"
-				if [ $OUTPUT_IDX -eq 1 ]
+				RERANDR_OUTPUT_IDX=$(( iRERANDR_OUTPUT_NUM + 1 ))
+				echo "i3.output.${RERANDR_OUTPUT_IDX}: ${OUTPUT[$OUTPUT_NUM]}"
+				if [ $RERANDR_OUTPUT_IDX -eq 1 ]
 				then
 					echo "i3.output.secondary: ${OUTPUT[$OUTPUT_NUM]}"
 				fi
